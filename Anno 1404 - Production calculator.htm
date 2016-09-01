@@ -1,0 +1,1737 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+	<title>Anno 1404 - Production calculator</title>
+	<link rel="shortcut icon" href="http://www.anno1404-rechner.de/favicon.ico">
+	<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+	<meta name="author" content="Markus Schönbein">
+	<meta name="description" content="Anno1404 Warenrechner - Zeigt den Bedarf an Produktionsketten um alle Bewohner zufrieden zu stellen.">
+	<meta name="keywords" content="Anno1404, Anno, 1404, Warenrechner, Rechner, App, Tool, Bedarf, Produktionsketten, Tipps, Planung">
+	<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+	<meta http-equiv="Content-Script-Type" content="text/javascript">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+
+	<link rel="stylesheet" href="Anno%201404%20-%20Production%20calculator_files/layout.css">
+	<link rel="stylesheet" href="Anno%201404%20-%20Production%20calculator_files/jquery.css">
+	<script language="javascript" src="Anno%201404%20-%20Production%20calculator_files/jquery.js"></script>
+	<script language="javascript" src="Anno%201404%20-%20Production%20calculator_files/jquery_002.js"></script>
+
+
+<script language="javascript">
+$(document).ready(function(){
+	$("img").tooltip({ 
+		track: true, 
+		delay: 0,
+		showBody: " *-* ",
+		showURL: false,
+		fade: 250 
+	});
+	
+	$("input").tooltip({ 
+		track: true, 
+		delay: 0,
+		showBody: " *-* ",
+		showURL: false,
+		fade: 250 
+	});
+	
+	// Bettler	
+	inputSettings('cBettlerRadio','cBettler','cBettlerHaus');
+	inputCalc('cBettler','cBettlerHaus',500);
+	// Bauern	
+	inputSettings('cBauernRadio','cBauern','cBauernHaus');
+	inputCalc('cBauern','cBauernHaus',8);
+	// Buerger
+	inputSettings('cBuergerRadio','cBuerger','cBuergerHaus');
+	inputCalc('cBuerger','cBuergerHaus',15);
+	// Patrizier	
+	inputSettings('cPatrizierRadio','cPatrizier','cPatrizierHaus');
+	inputCalc('cPatrizier','cPatrizierHaus',25);
+	// Adlige	
+	inputSettings('cAdligeRadio','cAdlige','cAdligeHaus');
+	inputCalc('cAdlige','cAdligeHaus',40);
+	// Normaden	
+	inputSettings('cNomadenRadio','cNomaden','cNomadenHaus');
+	inputCalc('cNomaden','cNomadenHaus',15);
+	// Gesandte	
+	inputSettings('cGesandteRadio','cGesandte','cGesandteHaus');
+	inputCalc('cGesandte','cGesandteHaus',25);
+	
+	// Summeschalter
+	$("input[name='switchRadio']").click(function(){
+		if($("input[name='switchRadio']:checked").val()=="bewohner"){
+			// Alle Bewohnereingaben aktiv
+			$(".bewohnerRadio").each(function(){ $(this).attr("checked","checked"); });
+			$(".bewohnerInput").each(function(){ 
+				$(this).removeAttr("disabled");
+				$(this).css({'color':'#000','background-color':'#FFFFFF'});
+				
+			});
+			// Alle Hauseingaben inaktiv
+			$(".hausInput").each(function(){
+				$(this).attr("disabled","disabled");
+				$(this).css({'color':'#0A0A0A','background-color':'#F1F1F1'});
+			});
+			
+		}else{
+			// Alle Hauseingaben aktiv
+			$(".hausRadio").each(function(){ $(this).attr("checked","checked"); });
+			$(".hausInput").each(function(){ 
+				$(this).removeAttr("disabled");
+				$(this).css({'color':'#000','background-color':'#FFFFFF'});
+				
+			});
+			// Alle Bewohnereingaben inaktiv
+			$(".bewohnerInput").each(function(){
+				$(this).attr("disabled","disabled");
+				$(this).css({'color':'#0A0A0A','background-color':'#F1F1F1'});
+			});
+		}
+	});
+	
+	// Produktionsketten Init
+	$("div#PKFrame").hide();
+	
+	// Submit mit Enter...
+	$(".saveinput").each(function(){
+		$(this).keyup(function(e){ 
+			if(e.keyCode == 13) {
+				calcform();
+			}
+		});
+	});
+});
+
+function inputSettings(nameRadio,nameBewohner,nameHaus){
+	// Startsettings
+	$("input[name='"+nameHaus+"']").css({'color':'#0A0A0A','background-color':'#F1F1F1'});
+	$("input[name='"+nameHaus+"']").attr("disabled","disabled");
+	
+	$("input[name='"+nameRadio+"']").click(function(){ 
+		if($("input[name='"+nameRadio+"']:checked").val()=="bewohner"){
+			// Bewohner aktiv
+			$("input[name='"+nameHaus+"']").attr("disabled","disabled");
+			$("input[name='"+nameBewohner+"']").removeAttr("disabled");
+			$("input[name='"+nameHaus+"']").css({'color':'#0A0A0A','background-color':'#F1F1F1'});
+			$("input[name='"+nameBewohner+"']").css({'color':'#000','background-color':'#FFFFFF'});
+		}else{
+			// Haus aktiv
+			$("input[name='"+nameBewohner+"']").attr("disabled","disabled");
+			$("input[name='"+nameHaus+"']").removeAttr("disabled");
+			$("input[name='"+nameBewohner+"']").css({'color':'#0A0A0A','background-color':'#F1F1F1'});
+			$("input[name='"+nameHaus+"']").css({'color':'#000','background-color':'#FFFFFF'});
+		}
+	});
+}
+
+function inputCalc(nameBewohner,nameHaus,anzahl){
+	$("input[name='"+nameBewohner+"']").keyup(function(){ $("input[name='"+nameHaus+"']").val(Math.ceil($("input[name='"+nameBewohner+"']").val()/anzahl)); });
+	$("input[name='"+nameHaus+"']").keyup(function(){ $("input[name='"+nameBewohner+"']").val(Math.ceil($("input[name='"+nameHaus+"']").val()*anzahl)); });
+}
+
+function calcform(){
+	showloader();
+	var itemstring='';
+	$(".itemselect").each(function(){
+		itemstring += ""+$(this).attr('id').substr(11)+"."+$(this).val()+":";
+	});
+	
+	// Evocheck...
+	if(!$("div#PKFrame").is(":hidden")){ $("div#PKFrame").slideUp("slow"); }
+	$.ajax({
+ 		type: "GET",
+		url: '/index.php',
+		data: {l:"all",av:"1",lang:"en",items:itemstring,cBettler:$("input[name='cBettler']").val(),cBauern:$("input[name='cBauern']").val(),cBuerger:$("input[name='cBuerger']").val(),cPatrizier:$("input[name='cPatrizier']").val(),cAdlige:$("input[name='cAdlige']").val(),cNomaden:$("input[name='cNomaden']").val(),cGesandte:$("input[name='cGesandte']").val(),evocheck:$("input[name='evocheck']").attr("checked")},
+		global: 'false',
+	   	success: function(msg){
+	   		$("div#result").slideUp("slow",function(){ 
+	   			$("div#result").html(msg);	
+	   			$("div#result").slideDown("slow");
+	   		});
+	   		hideloader();
+	   	}
+	});
+}
+
+function saveresult(){
+	showloader();
+	resultstring='';
+	$(".saveresult").each(function(){
+		resultstring += ""+$(this).attr('id').substring(14)+"."+$(this).text()+":";
+	}); resultstring = resultstring.substring(0,(resultstring.length-1));
+	hideloader();
+}
+
+function compareresult(){
+	showloader();
+	// Comparestring anlegen
+	comparestring='';
+	$(".saveresult").each(function(){
+		comparestring += ""+$(this).attr('id').substring(14)+"."+$(this).text()+":";
+	}); comparestring = comparestring.substring(0,(comparestring.length-1));
+	
+	if(typeof resultstring != "undefined" && resultstring.length > 0){
+		// Aufteilen
+		var resultArray = resultstring.split(":");
+		var compareArray = comparestring.split(":");
+		
+		for (var i = 0; i < resultArray.length; i++) {
+			var tmpresult = resultArray[i].split(".");
+			var tmpcompare = compareArray[i].split(".");
+			
+			var dif=((tmpresult[1]-tmpcompare[1])*-1);
+			if(dif <0){
+				var color="#ff0000";
+			}else if(dif == 0){
+				var color="#000000";
+			}else{
+				var dif = '+'+dif;
+				var color="#000000";
+			}
+			
+			$("span#comparebetrieb_"+tmpresult[0]).html("<span style=\"color:"+color+"\">"+dif+"</span>");
+		}
+		
+		$("#difFrame").show();
+		
+	}else{
+		alert("No Result saved!");
+	}
+	hideloader();
+}
+
+function showPK(wid,count,proz){
+	showloader();
+	$.ajax({
+			type: "GET",
+		url: '/index.php',
+		data: {l:"pk",av:"1",lang:"en",wid:wid,count:count,proz:proz},
+		global: 'false',
+	   	success: function(msg){ 
+	   			$("div#PKFrame").html(msg);	
+	   			$("div#PKFrame").show();
+	   			window.location.href='#pkDisplay';
+	   		hideloader();
+	   	}
+	});
+}
+
+function hidePK(){
+	$("div#PKFrame").hide();
+}
+
+function resetform(){
+	$("input[name='cBettler']").val("0");
+	$("input[name='cBettlerHaus']").val("0");
+	
+	$("input[name='cBauern']").val("0");
+	$("input[name='cBauernHaus']").val("0");
+	
+	$("input[name='cBuerger']").val("0");
+	$("input[name='cBuergerHaus']").val("0");
+	
+	$("input[name='cPatrizier']").val("0");
+	$("input[name='cPatrizierHaus']").val("0");
+	
+	$("input[name='cAdlige']").val("0");
+	$("input[name='cAdligeHaus']").val("0");
+	
+	$("input[name='cNomaden']").val("0");
+	$("input[name='cNomadenHaus']").val("0");
+	
+	$("input[name='cGesandte']").val("0");
+	$("input[name='cGesandteHaus']").val("0");
+	
+	$(".itemresult").each(function(){
+		$(this).text("0");
+	});
+	
+	$(".itemselect").each(function(){
+		$(this).attr("selectedIndex","0");
+	});
+}
+
+function print(site,lang){
+	url='/print.php?lang='+lang+'&l=pk';
+	newwindow=window.open(url,'PrintView','height=800,width=1200,scrollbars=yes');
+	if (window.focus) { newwindow.focus()}
+}
+
+function saveinput(){
+	showloader();
+	savestring='';
+	$(".saveinput").each(function(){
+		savestring += ""+$(this).attr('name')+"."+$(this).val()+":";
+	}); savestring = savestring.substring(0,(savestring.length-1));
+	
+	$.ajax({
+			type: "GET",
+			url: '/cookie.php',
+			data: {l:"save",savestring:savestring},
+			global: 'false',
+			success: function(msg){ hideloader(); }
+	});
+}
+
+function loadinput(){
+	showloader();
+	$.ajax({
+			type: "GET",
+			url: '/cookie.php',
+			data: {l:"load"},
+			global: 'false',
+			success: function(msg){ 
+				if(msg != "false"){
+					var savedinputs = msg.split(":");
+					for(var i=0;i<savedinputs.length;i++){
+						var tmp = savedinputs[i].split(".");
+						// Input or Select
+						if(tmp[0].substring(0,10)=="itemselect"){
+							// Select
+							$("select[name='"+tmp[0]+"']").attr("selectedIndex",tmp[1]);
+							$("span#itemresult_"+tmp[0].substring(11)).text((tmp[1]*25));
+						}else{
+							// Input
+							$("input[name='"+tmp[0]+"']").val(tmp[1]);
+						}
+					}
+				}
+				
+				hideloader();
+			}
+	});
+}
+
+function hideloader(){ $("div#loader").hide(); }
+function showloader(){ $("div#loader").show(); }
+
+function importclientstring(){
+	$('div#importFrame').hide();
+	var string=$('#importstring').val();
+	// Importstring auswerten
+		// Bettler
+		var tmp = string.match(/bettler.{1,6}[0-9]:/);
+		if(tmp){ $("input[name='cBettler']").val(tmp[0].substring(8,(tmp[0].length-1))); } var tmp=false;
+		// Bauern
+		var tmp = string.match(/bauern.{1,6}[0-9]:/);
+		if(tmp){ $("input[name='cBauern']").val(tmp[0].substring(7,(tmp[0].length-1))); } var tmp=false;
+		// Buerger
+		var tmp = string.match(/buerger.{1,6}[0-9]:/);
+		if(tmp){ $("input[name='cBuerger']").val(tmp[0].substring(8,(tmp[0].length-1))); } var tmp=false;
+		// Patrizier
+		var tmp = string.match(/patrizier.{1,6}[0-9]:/);
+		if(tmp){ $("input[name='cPatrizier']").val(tmp[0].substring(10,(tmp[0].length-1))); } var tmp=false;
+		// Adlige
+		var tmp = string.match(/adlige.{1,6}[0-9]:/);
+		if(tmp){ $("input[name='cAdlige']").val(tmp[0].substring(7,(tmp[0].length-1))); } var tmp=false;
+		// Nomaden
+		var tmp = string.match(/nomaden.{1,6}[0-9]:/);
+		if(tmp){ $("input[name='cNomaden']").val(tmp[0].substring(8,(tmp[0].length-1))); } var tmp=false;
+		// Gesandte
+		var tmp = string.match(/gesandte.{1,6}[0-9]/);
+		if(tmp){ $("input[name='cGesandte']").val(tmp[0].substring(9,tmp[0].length)); } var tmp=false;
+		
+		$('#importstring').val("");
+}
+
+</script>
+
+
+</head>
+<body>
+<div id="top" class="wrapper">
+	<div id="loader">
+		<img src="Anno%201404%20-%20Production%20calculator_files/loader.gif" alt="">
+		<div>Bitte warten...</div>
+	</div>
+
+	<div style="margin-bottom: 0px;" class="center">
+		<div><a href="http://www.anno1404-rechner.de/index.php?lang=en"><img src="Anno%201404%20-%20Production%20calculator_files/logo.jpg" alt="" class="titlepic" height="177" width="1200"></a></div>
+		
+		
+	</div>
+	<h1 id="produktionsketten">Production chains</h1>
+
+
+<h1 class="pkDisplayCH1"><img src="Anno%201404%20-%20Production%20calculator_files/iconBauer.png" alt="" height="46" width="46"> Peasant</h1>
+					<div class="pkDisplayC">
+			
+			<p>Fish</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconFisch.png" alt="" height="46" width="46"></li>
+				<li><label>Fish</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconFisch.png" alt="" height="46" width="46"></li>
+				<li><label>Fishing lodge</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+				
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Cider</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconMost.png" alt="" height="46" width="46"></li>
+				<li><label>Cider</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconMost.png" alt="" height="46" width="46"></li>
+				<li><label>Cider Farm</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+				
+		</div>
+	<h1 class="pkDisplayCH1"><img src="Anno%201404%20-%20Production%20calculator_files/iconBuerger.png" alt="" height="46" width="46"> Citizen</h1>
+					<div class="pkDisplayC">
+			
+			<p>Linen garments</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconLeinenkutten.png" alt="" height="46" width="46"></li>
+				<li><label>Linen garments</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconLeinenkutten.png" alt="" height="46" width="46"></li>
+				<li><label>Weaver's hut</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconHanf.png" alt="" height="46" width="46"></li>
+	<li><label>Hemp plantation</label></li>
+	<li>(100.0%)</li>
+</ol>
+								
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Spices</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconGewuerze.png" alt="" height="46" width="46"></li>
+				<li><label>Spices</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconGewuerze.png" alt="" height="46" width="46"></li>
+				<li><label>Spice farm</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+				
+		</div>
+	<h1 class="pkDisplayCH1"><img src="Anno%201404%20-%20Production%20calculator_files/iconPatrizier.png" alt="" height="46" width="46"> Patrician</h1>
+					<div class="pkDisplayC">
+			
+			<p>Bread</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconBrot.png" alt="" height="46" width="46"></li>
+				<li><label>Bread</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconBrot.png" alt="" height="46" width="46"></li>
+				<li><label>Bakery</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconMehl.png" alt="" height="46" width="46"></li>
+	<li><label>Mill</label></li>
+	<li>(100.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconGetreide.png" alt="" height="46" width="46"></li>
+	<li><label>Crop farm</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Beer</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconBier.png" alt="" height="46" width="46"></li>
+				<li><label>Beer</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconBier.png" alt="" height="46" width="46"></li>
+				<li><label>Monastery brewery</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconGetreide.png" alt="" height="46" width="46"></li>
+	<li><label>Crop farm</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKraeuter.png" alt="" height="46" width="46"></li>
+	<li><label>Monastery garden</label></li>
+	<li>(100.0%)</li>
+</ol>
+								
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Leather jerkins</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconLederwaemse.png" alt="" height="46" width="46"></li>
+				<li><label>Leather jerkins</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					2x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconLederwaemse.png" alt="" height="46" width="46"></li>
+				<li><label>Tannery</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>4x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconSchweinezucht.png" alt="" height="46" width="46"></li>
+	<li><label>Pig Farm</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconSalz.png" alt="" height="46" width="46"></li>
+	<li><label>Saltworks</label></li>
+	<li>(100.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconSalzmine.png" alt="" height="46" width="46"></li>
+	<li><label>Salt Mine</label></li>
+	<li>(100.0%)</li>
+</ol>
+			
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKohle1.png" alt="" height="46" width="46"></li>
+	<li><label>Charcoal Burner's Hut</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Books</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconBuecher.png" alt="" height="46" width="46"></li>
+				<li><label>Books</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					2x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconBuecher.png" alt="" height="46" width="46"></li>
+				<li><label>Printing House</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>4x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconIndigo.png" alt="" height="46" width="46"></li>
+	<li><label>Indigo Farm</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconPapier.png" alt="" height="46" width="46"></li>
+	<li><label>Paper Mill</label></li>
+	<li>(100.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconHolz.png" alt="" height="46" width="46"></li>
+	<li><label>Lumberjack's Hut</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Candlesticks</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKerzenleuchter.png" alt="" height="46" width="46"></li>
+				<li><label>Candlesticks</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					4x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKerzenleuchter.png" alt="" height="46" width="46"></li>
+				<li><label>Redsmith's Workshop</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>6x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKerze.png" alt="" height="46" width="46"></li>
+	<li><label>Candlemaker's Workshop</label></li>
+	<li>(100.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>12x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconHonig.png" alt="" height="46" width="46"></li>
+	<li><label>Apiary</label></li>
+	<li>(100.0%)</li>
+</ol>
+			
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>6x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconHanf.png" alt="" height="46" width="46"></li>
+	<li><label>Hemp plantation</label></li>
+	<li>(100.0%)</li>
+</ol>
+										
+					<span style="font-size:1em;">+</span>
+<br><br><ol style="visibility: hidden;">
+	<li><label>3x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconMessing.png" alt="" height="46" width="46"></li>
+	<li><label>Padpad Pad Pad</label></li>
+	<li>(100.0%)</li>
+</ol><ol>
+	<li><label>3x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconMessing.png" alt="" height="46" width="46"></li>
+	<li><label>Copper Smelter</label></li>
+	<li>(100.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>3x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKupfererz.png" alt="" height="46" width="46"></li>
+	<li><label>Copper Mine</label></li>
+	<li>(100.0%)</li>
+</ol>
+			
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKohle1.png" alt="" height="46" width="46"></li>
+	<li><label>Charcoal Burner's Hut</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+		</div>
+	<h1 class="pkDisplayCH1"><img src="Anno%201404%20-%20Production%20calculator_files/iconAdlige.png" alt="" height="46" width="46"> Noblemen</h1>
+					<div class="pkDisplayC">
+			
+			<p>Meat</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconFleisch.png" alt="" height="46" width="46"></li>
+				<li><label>Meat</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					2x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconFleisch.png" alt="" height="46" width="46"></li>
+				<li><label>Butchery</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>4x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconRind.png" alt="" height="46" width="46"></li>
+	<li><label>Cattle farm</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconSalz.png" alt="" height="46" width="46"></li>
+	<li><label>Saltworks</label></li>
+	<li>(96.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconSalzmine.png" alt="" height="46" width="46"></li>
+	<li><label>Salt Mine</label></li>
+	<li>(96.0%)</li>
+</ol>
+			
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKohle1.png" alt="" height="46" width="46"></li>
+	<li><label>Charcoal Burner's Hut</label></li>
+	<li>(96.0%)</li>
+</ol>
+									
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Wine</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconWein.png" alt="" height="46" width="46"></li>
+				<li><label>Wine</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					2x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconWein.png" alt="" height="46" width="46"></li>
+				<li><label>Wine Press</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>6x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconTraube.png" alt="" height="46" width="46"></li>
+	<li><label>Vineyard</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconFass.png" alt="" height="46" width="46"></li>
+	<li><label>Barrel Cooperage</label></li>
+	<li>(100.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconHolz.png" alt="" height="46" width="46"></li>
+	<li><label>Lumberjack's Hut</label></li>
+	<li>(66.5%)</li>
+</ol>
+			
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconEisen.png" alt="" height="46" width="46"></li>
+	<li><label>Iron Smelter</label></li>
+	<li>(100.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconEisenerz.png" alt="" height="46" width="46"></li>
+	<li><label>Iron Mine</label></li>
+	<li>(100.0%)</li>
+</ol>
+			
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKohle1.png" alt="" height="46" width="46"></li>
+	<li><label>Charcoal Burner's Hut</label></li>
+	<li>(100.0%)</li>
+</ol>
+										
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Glasses</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconBrillen.png" alt="" height="46" width="46"></li>
+				<li><label>Glasses</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					4x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconBrillen.png" alt="" height="46" width="46"></li>
+				<li><label>Optician's Workshop</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>3x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconQuarz.png" alt="" height="46" width="46"></li>
+	<li><label>Quarz Quarry</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>3x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconMessing.png" alt="" height="46" width="46"></li>
+	<li><label>Copper Smelter</label></li>
+	<li>(100.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>3x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKupfererz.png" alt="" height="46" width="46"></li>
+	<li><label>Copper Mine</label></li>
+	<li>(100.0%)</li>
+</ol>
+			
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKohle1.png" alt="" height="46" width="46"></li>
+	<li><label>Charcoal Burner's Hut</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Fur coats</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconPelzmaentel.png" alt="" height="46" width="46"></li>
+				<li><label>Fur coats</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					3x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconPelzmaentel.png" alt="" height="46" width="46"></li>
+				<li><label>Furrier's Workshop</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>3x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconPelz.png" alt="" height="46" width="46"></li>
+	<li><label>Trapper's Lodge</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconSalz.png" alt="" height="46" width="46"></li>
+	<li><label>Saltworks</label></li>
+	<li>(95.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconSalzmine.png" alt="" height="46" width="46"></li>
+	<li><label>Salt Mine</label></li>
+	<li>(95.0%)</li>
+</ol>
+			
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKohle1.png" alt="" height="46" width="46"></li>
+	<li><label>Charcoal Burner's Hut</label></li>
+	<li>(95.0%)</li>
+</ol>
+									
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Brocade robes</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconBrokatgewaender.png" alt="" height="46" width="46"></li>
+				<li><label>Brocade robes</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconBrokatgewaender.png" alt="" height="46" width="46"></li>
+				<li><label>Silk Weaving Mill</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconSeide.png" alt="" height="46" width="46"></li>
+	<li><label>Silk Plantation</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconGold.png" alt="" height="46" width="46"></li>
+	<li><label>Gold Smelter</label></li>
+	<li>(100.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconGolderz.png" alt="" height="46" width="46"></li>
+	<li><label>Goldmine</label></li>
+	<li>(100.0%)</li>
+</ol>
+			
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKohle1.png" alt="" height="46" width="46"></li>
+	<li><label>Charcoal Burner's Hut</label></li>
+	<li>(75.0%)</li>
+</ol>
+									
+		</div>
+	<h1 class="pkDisplayCH1"><img src="Anno%201404%20-%20Production%20calculator_files/iconNormaden.png" alt="" height="46" width="46"> Nomads</h1>
+					<div class="pkDisplayC">
+			
+			<p>Dates</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconDatteln.png" alt="" height="46" width="46"></li>
+				<li><label>Dates</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconDatteln.png" alt="" height="46" width="46"></li>
+				<li><label>Date plantation</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+				
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Milk</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconMilch.png" alt="" height="46" width="46"></li>
+				<li><label>Milk</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconMilch.png" alt="" height="46" width="46"></li>
+				<li><label>Goat Farm</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+				
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Carpets</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconTeppiche.png" alt="" height="46" width="46"></li>
+				<li><label>Carpets</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconTeppiche.png" alt="" height="46" width="46"></li>
+				<li><label>Carpet Workshop</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconSeide.png" alt="" height="46" width="46"></li>
+	<li><label>Silk Plantation</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconIndigo.png" alt="" height="46" width="46"></li>
+	<li><label>Indigo Farm</label></li>
+	<li>(100.0%)</li>
+</ol>
+								
+		</div>
+	<h1 class="pkDisplayCH1"><img src="Anno%201404%20-%20Production%20calculator_files/iconGesandte.png" alt="" height="46" width="46"> Envoys</h1>
+					<div class="pkDisplayC">
+			
+			<p>Coffee</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKaffee.png" alt="" height="46" width="46"></li>
+				<li><label>Coffee</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKaffee.png" alt="" height="46" width="46"></li>
+				<li><label>Roasting House</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKBohne.png" alt="" height="46" width="46"></li>
+	<li><label>Coffee Plantation</label></li>
+	<li>(100.0%)</li>
+</ol>
+								
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Pearl Necklaces</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconPerlenketten.png" alt="" height="46" width="46"></li>
+				<li><label>Pearl Necklaces</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconPerlenketten.png" alt="" height="46" width="46"></li>
+				<li><label>Pearl Workshop</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconPerle.png" alt="" height="46" width="46"></li>
+	<li><label>Pearl Fisher's Hut</label></li>
+	<li>(100.0%)</li>
+</ol>
+								
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Parfum</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconDuftwasser_002.png" alt="" height="46" width="46"></li>
+				<li><label>Parfum</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconDuftwasser.png" alt="" height="46" width="46"></li>
+				<li><label>Perfumery</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>3x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconRose.png" alt="" height="46" width="46"></li>
+	<li><label>Rose Nursery</label></li>
+	<li>(100.0%)</li>
+</ol>
+								
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Marzipan</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconMarzipan.png" alt="" height="46" width="46"></li>
+				<li><label>Marzipan</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconMarzipan.png" alt="" height="46" width="46"></li>
+				<li><label>Confectioner's Workshop</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconMandel.png" alt="" height="46" width="46"></li>
+	<li><label>Almond Plantation</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconZucker.png" alt="" height="46" width="46"></li>
+	<li><label>Sugar Mill</label></li>
+	<li>(100.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconZuckerrohr.png" alt="" height="46" width="46"></li>
+	<li><label>Sugarcane Plantation</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+		</div>
+	<h1 class="pkDisplayCH1"><img src="Anno%201404%20-%20Production%20calculator_files/iconCategoryMisc.png" alt="" height="46" width="46"> Miscellaneous</h1>
+					<div class="pkDisplayC">
+			
+			<p>Wood</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconHolz.png" alt="" height="46" width="46"></li>
+				<li><label>Wood</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconHolz.png" alt="" height="46" width="46"></li>
+				<li><label>Lumberjack's Hut</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+				
+		</div><div class="pkDisplayC">
+			
+			<p>Stone</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconStein.png" alt="" height="46" width="46"></li>
+				<li><label>Stone</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconStein.png" alt="" height="46" width="46"></li>
+				<li><label>Stonemason's Hut</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+				
+		</div><div class="pkDisplayC">
+			
+			<p>Iron</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconEisen.png" alt="" height="46" width="46"></li>
+				<li><label>Iron</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconEisen.png" alt="" height="46" width="46"></li>
+				<li><label>Iron Smelter</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconEisenerz.png" alt="" height="46" width="46"></li>
+	<li><label>Iron Mine</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKohle1.png" alt="" height="46" width="46"></li>
+	<li><label>Charcoal Burner's Hut</label></li>
+	<li>(100.0%)</li>
+</ol>
+								
+		</div><div class="pkDisplayC">
+			
+			<p>Tools</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconWerkzeuge.png" alt="" height="46" width="46"></li>
+				<li><label>Tools</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					2x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconWerkzeuge.png" alt="" height="46" width="46"></li>
+				<li><label>Toolmaker's Workshop</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconEisen.png" alt="" height="46" width="46"></li>
+	<li><label>Iron Smelter</label></li>
+	<li>(100.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconEisenerz.png" alt="" height="46" width="46"></li>
+	<li><label>Iron Mine</label></li>
+	<li>(100.0%)</li>
+</ol>
+			
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKohle1.png" alt="" height="46" width="46"></li>
+	<li><label>Charcoal Burner's Hut</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+		</div><div class="pkDisplayC">
+			
+			<p>Ropes</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconSeile.png" alt="" height="46" width="46"></li>
+				<li><label>Ropes</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconSeile.png" alt="" height="46" width="46"></li>
+				<li><label>Ropeyard</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconHanf.png" alt="" height="46" width="46"></li>
+	<li><label>Hemp plantation</label></li>
+	<li>(100.0%)</li>
+</ol>
+								
+		</div><div class="pkDisplayC">
+			
+			<p>Salt</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconSalz.png" alt="" height="46" width="46"></li>
+				<li><label>Salt</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconSalz.png" alt="" height="46" width="46"></li>
+				<li><label>Saltworks</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconSalzmine.png" alt="" height="46" width="46"></li>
+	<li><label>Salt Mine</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKohle1.png" alt="" height="46" width="46"></li>
+	<li><label>Charcoal Burner's Hut</label></li>
+	<li>(100.0%)</li>
+</ol>
+								
+		</div><div class="pkDisplayC">
+			
+			<p>Glass</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconGlas.png" alt="" height="46" width="46"></li>
+				<li><label>Glass</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					2x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconGlas.png" alt="" height="46" width="46"></li>
+				<li><label>Glass Smelter</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconQuarz.png" alt="" height="46" width="46"></li>
+	<li><label>Quarz Quarry</label></li>
+	<li>(75.0%)</li>
+</ol>
+									
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconPottasche.png" alt="" height="46" width="46"></li>
+	<li><label>Forest Glassworks</label></li>
+	<li>(100.0%)</li>
+</ol>
+								
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>Brass</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconMessing.png" alt="" height="46" width="46"></li>
+				<li><label>Brass</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconMessing.png" alt="" height="46" width="46"></li>
+				<li><label>Copper Smelter</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKupfererz.png" alt="" height="46" width="46"></li>
+	<li><label>Copper Mine</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKohle1.png" alt="" height="46" width="46"></li>
+	<li><label>Charcoal Burner's Hut</label></li>
+	<li>(67.0%)</li>
+</ol>
+								
+		</div><div class="pkDisplayC">
+			
+			<p>Mosaic</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconMosaik.png" alt="" height="46" width="46"></li>
+				<li><label>Mosaic</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconMosaik.png" alt="" height="46" width="46"></li>
+				<li><label>Mosaic Workshop</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconLehm.png" alt="" height="46" width="46"></li>
+	<li><label>Clay Pit</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconQuarz.png" alt="" height="46" width="46"></li>
+	<li><label>Quarz Quarry</label></li>
+	<li>(90.0%)</li>
+</ol>
+								
+		</div>
+					
+					
+					
+					<div class="pkDisplayC">
+			
+			<p>Weapons</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconWaffen.png" alt="" height="46" width="46"></li>
+				<li><label>Weapons</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconWaffen.png" alt="" height="46" width="46"></li>
+				<li><label>Weapon Smithy</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconEisen.png" alt="" height="46" width="46"></li>
+	<li><label>Iron Smelter</label></li>
+	<li>(100.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconEisenerz.png" alt="" height="46" width="46"></li>
+	<li><label>Iron Mine</label></li>
+	<li>(100.0%)</li>
+</ol>
+			
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKohle1.png" alt="" height="46" width="46"></li>
+	<li><label>Charcoal Burner's Hut</label></li>
+	<li>(100.0%)</li>
+</ol>
+									
+		</div>
+					
+					
+					
+					
+					<div class="pkDisplayC">
+			
+			<p>Cannons</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKanonen.png" alt="" height="46" width="46"></li>
+				<li><label>Cannons</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKanonen.png" alt="" height="46" width="46"></li>
+				<li><label>Cannon Foundry</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconEisen.png" alt="" height="46" width="46"></li>
+	<li><label>Iron Smelter</label></li>
+	<li>(75.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconEisenerz.png" alt="" height="46" width="46"></li>
+	<li><label>Iron Mine</label></li>
+	<li>(75.0%)</li>
+</ol>
+			
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>1x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKohle1.png" alt="" height="46" width="46"></li>
+	<li><label>Charcoal Burner's Hut</label></li>
+	<li>(75.0%)</li>
+</ol>
+										
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconHolz.png" alt="" height="46" width="46"></li>
+	<li><label>Lumberjack's Hut</label></li>
+	<li>(100.0%)</li>
+</ol>
+								
+		</div>
+					<div class="pkDisplayC">
+			
+			<p>War Machines</p>
+			
+			<ol>
+				<li>&nbsp;</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKriegsmaschinen.png" alt="" height="46" width="46"></li>
+				<li><label>War Machines</label></li>
+				<li>&nbsp;</li>
+			</ol>
+			
+			<span style="font-size:1em;">=</span>
+			
+			<ol>
+				<li>
+					1x
+				</li>
+				<li><img src="Anno%201404%20-%20Production%20calculator_files/iconKriegsmaschinen.png" alt="" height="46" width="46"></li>
+				<li><label>War Machines Workshop</label></li>
+				<li>(100%)</li>
+			</ol>
+			
+												
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconSeile.png" alt="" height="46" width="46"></li>
+	<li><label>Ropeyard</label></li>
+	<li>(75.0%)</li>
+</ol>
+				
+		<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconHanf.png" alt="" height="46" width="46"></li>
+	<li><label>Hemp plantation</label></li>
+	<li>(75.0%)</li>
+</ol>
+										
+					<span style="font-size:1em;">+</span>
+<ol>
+	<li><label>2x</label></li>
+	<li><img src="Anno%201404%20-%20Production%20calculator_files/iconHolz.png" alt="" height="46" width="46"></li>
+	<li><label>Lumberjack's Hut</label></li>
+	<li>(100.0%)</li>
+</ol>
+								
+		</div>
+	</div>
+
+<div class="" style="display: none;" id="tooltip"><h3></h3><div class="body"></div><div class="url"></div></div></body></html>

@@ -1,0 +1,24 @@
+#tooltip {
+	position: absolute;
+	z-index: 3000;
+	border: 1px solid #947149;
+	background-color: #373028;
+	padding: 5px;
+	opacity: 1;
+	color:#d0baa3;
+	font-size: 1em;
+}
+
+#tooltip .ttTitel{
+	color:#3bed59;
+}
+
+#tooltip .ttBody{
+	color:#d0baa3;
+}
+
+#tooltip h3, #tooltip div { 
+	font-size:1em; 
+	margin: 0;
+	font-weight: normal;
+}
